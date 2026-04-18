@@ -1,9 +1,6 @@
 fastapi
 uvicorn
 yt-dlp
-allin1
-openai-whisper
-demucs
-essentia
-torch
+google-genai
 pydantic
+python-dotenv

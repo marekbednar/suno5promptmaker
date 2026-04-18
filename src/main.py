@@ -3,15 +3,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from .downloader import download_audio
-from .analyzer import analyze_audio
-from .transcriber import transcribe_audio
-from .prompt_generator import generate_suno_prompt
+from .gemini_agent import process_with_gemini
 
 app = FastAPI(
     title="Suno Prompt Generator API", 
-    description="The Brain for processing YouTube audio into Suno prompts"
+    description="The Brain for processing YouTube audio into Suno prompts using Gemini"
 )
 
 app.add_middleware(
@@ -24,51 +26,48 @@ app.add_middleware(
 
 class GenerateRequest(BaseModel):
     youtube_url: str
-    genre: Optional[str] = "pop"
+    language: Optional[str] = None
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to Suno Prompt Generator API. The Brain is online."}
+    return {"message": "Welcome to Suno Prompt Generator API. The Gemini Brain is online."}
 
 @app.post("/generate")
 def generate_prompt(request: GenerateRequest):
-    temp_audio_path = "temp_audio.mp3"
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key or api_key == "your_api_key_here":
+        raise HTTPException(status_code=500, detail="Gemini API Key is missing. Please add it to your .env file.")
+        
+    temp_audio_path = "temp_gemini_audio.mp3"
     
     try:
         # 1. Download audio
         audio_path = download_audio(request.youtube_url, output_path=temp_audio_path)
         
-        # 2. Analyze audio (BPM, Key, Chords)
-        analysis_result = analyze_audio(audio_path)
+        # 2. Let Gemini do everything!
+        raw_output = process_with_gemini(audio_path, api_key, request.language)
         
-        # 3. Transcribe audio (Lyrics)
-        transcription_result = transcribe_audio(audio_path)
+        style_tags = ""
+        lyrics_prompt = raw_output
         
-        # Combine lyrics for the prompt generator
-        full_lyrics = "\n".join([seg["text"] for seg in transcription_result])
-        
-        # 4. Generate Prompt
-        prompt = generate_suno_prompt(
-            bpm=analysis_result.get("bpm", 120.0),
-            key=analysis_result.get("key", "Unknown"),
-            chords=analysis_result.get("segments", []),
-            raw_chords=analysis_result.get("raw_chords", []),
-            lyrics=transcription_result
-        )
+        if "---STYLE TAGS---" in raw_output and "---LYRICS PROMPT---" in raw_output:
+            parts = raw_output.split("---LYRICS PROMPT---")
+            style_tags = parts[0].replace("---STYLE TAGS---", "").strip()
+            lyrics_prompt = parts[1].strip()
         
         return {
             "status": "success",
-            "analysis": analysis_result,
-            "transcription": transcription_result,
-            "transcription_preview": full_lyrics[:100] + "...",
-            "suno_prompt": prompt
+            "style_tags": style_tags,
+            "suno_prompt": lyrics_prompt
         }
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
         
     finally:
-        # Cleanup temporary audio file if it exists
+        # Cleanup temporary audio file
         if os.path.exists(temp_audio_path):
             try:
                 os.remove(temp_audio_path)
