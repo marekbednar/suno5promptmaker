@@ -55,8 +55,7 @@ Place this inside the bracket next to the section name.
 Example: `[Verse: Gritty male tenor, fuzz electric guitar, Hammond B3 organ, driving slap bass]`
 
 CRITICAL INSTRUCTION FOR CHORDS: You must inline the musical chords exactly where they occur within the lyrics. 
-- WARNING: DO NOT hallucinate or make up chords. ONLY include chords if you are absolutely certain you hear them. If you are unsure about the harmony, omit the chord entirely rather than guessing.
-- When you are certain, analyze the harmony with extreme precision. Identify voicings, extensions, suspensions, and inversions.
+- You MUST analyze the harmony with extreme precision. Do not just use basic triads. You must identify the exact voicings, extensions, suspensions, and inversions.
 - Place the chord in brackets right before the word where the chord change happens.
 - If a chord change happens IN THE MIDDLE of a word, place the chord exactly between the syllables with NO spaces. Example: `Začí[Fm7]na`.
 
@@ -69,7 +68,8 @@ Make sure to accurately capture the structural flow, the deep instrumentation, t
 
     response = client.models.generate_content(
         model='gemini-2.5-pro',
-        contents=[audio_file, prompt]
+        contents=[audio_file, prompt],
+        config=types.GenerateContentConfig(temperature=0.0)
     )
     
     # Cleanup the file from Gemini's servers
