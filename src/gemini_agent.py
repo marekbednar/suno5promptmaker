@@ -64,7 +64,7 @@ If a section is purely instrumental, just list the progression.
 CRITICAL INSTRUCTION FOR INSTRUMENTALS: Do NOT write repeating chords over and over like `[Fm] [Fm]`. Instead, use a multiplier format like `[Fm - 4x]`.
 
 {lang_instruction}
-Make sure to accurately capture the structural flow, the highly precise chord voicings, the deep instrumentation, the time signature, modulations, and transcribe the lyrics perfectly. Do not include conversational text, just the requested format.
+Make sure to accurately capture the structural flow, the deep instrumentation, the time signature, modulations, and transcribe the lyrics perfectly. Do not include conversational text, just the requested format.
 """
 
     response = client.models.generate_content(
