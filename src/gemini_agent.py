@@ -68,7 +68,7 @@ Make sure to accurately capture the structural flow, the deep instrumentation, t
 """
 
     response = client.models.generate_content(
-        model='gemini-3.1-pro-preview',
+        model='gemini-2.5-pro',
         contents=[audio_file, prompt]
     )
     
